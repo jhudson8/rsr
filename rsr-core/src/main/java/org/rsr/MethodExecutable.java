@@ -5,12 +5,10 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.rsr.params.ContextParameterProvider;
 import org.rsr.params.IntegerRouteParamProvider;
 import org.rsr.params.LongRouteParamProvider;
-import org.rsr.params.MappedParamsParameterProvider;
 import org.rsr.params.ParameterProvider;
 import org.rsr.params.StringRouteParamProvider;
 
@@ -38,10 +36,8 @@ public class MethodExecutable implements Executable {
 			} else if (clazz.equals(Integer.class)) {
 				parameterProviders.add(new IntegerRouteParamProvider(numParameters++));
 				numParameters ++;
-			} else if (clazz.equals(Context.class)) {
+			} else if (Context.class.isAssignableFrom(clazz)) {
 				parameterProviders.add(new ContextParameterProvider());
-			} else if (clazz.isAssignableFrom(Map.class)) {
-				parameterProviders.add(new MappedParamsParameterProvider());
 			} else {
 				throw new RuntimeException("Unknown method paramer type: " + clazz.getName());
 			}

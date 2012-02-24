@@ -41,8 +41,8 @@ public class VariableRouteTest extends TestCase {
 		RestResponse response = handler.onRoute("/foo/whatever", context, "get");
 		assertNull(response);
 		response = handler.onRoute("/foo/whatever/blabla/123", context, "get");
-		assertEquals("whatever", context.getNamedParameters().get("bar"));
-		assertEquals("123", context.getNamedParameters().get("another"));
+		assertEquals("whatever", context.getParameter("bar"));
+		assertEquals("123", context.getParameter("another"));
 	}
 
 	public void testWildcard() {
@@ -55,7 +55,7 @@ public class VariableRouteTest extends TestCase {
 		assertEquals(2, executable.getParameters().length);
 		assertEquals("whatever", executable.getParameters()[0]);
 		assertEquals("baz/biz", executable.getParameters()[1]);
-		assertEquals("whatever", context.getNamedParameters().get("bar"));
-		assertEquals("baz/biz", context.getNamedParameters().get("splat"));
+		assertEquals("whatever", context.getParameter("bar"));
+		assertEquals("baz/biz", context.getParameter("splat"));
 	}
 }

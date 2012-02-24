@@ -4,5 +4,9 @@ import java.util.Map;
 
 public interface Context {
 
-	public Map<String, String> getNamedParameters();
+	public void setRouteParameters(Map<String, String> parameters);
+
+	public String getParameter(String name);
+
+	public String[] getParameterValues(String name);
 }

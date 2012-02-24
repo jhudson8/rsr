@@ -154,22 +154,17 @@ public class RestHandler implements Serializable {
 					if (matcher.matches()) {
 						String[] params = getRouteParams(route, matcher);
 						String[] varNames = mapping.getVarNames();
+						Map<String, String> routeParams = new HashMap<String, String>();
 						for (int i = 0; i < params.length; i++) {
 							if (null != params[i]) {
 								if (params[i].length() == 0) {
 									params[i] = null;
 								} else {
-									if ((varNames.length > i)
-											&& null == context
-													.getNamedParameters().get(
-															varNames[i])) {
-										context.getNamedParameters().put(
-												varNames[i], params[i]);
-									}
+									routeParams.put(varNames[i], params[i]);
 								}
 							}
 						}
-
+						context.setRouteParameters(routeParams);
 						Serializable rtn = mapping.execute(route, params,
 								context);
 						return new RestResponse(rtn, mapping.getSerializer(),
