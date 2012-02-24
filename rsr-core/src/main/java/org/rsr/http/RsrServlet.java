@@ -48,7 +48,12 @@ public class RsrServlet extends HttpServlet {
 		if (null != mediaType) {
 			resp.setContentType(mediaType);
 		}
-		response.connect(resp.getOutputStream());
-		resp.getOutputStream().close();
+		try {
+			response.connect(resp.getOutputStream());
+			resp.getOutputStream().close();
+		}
+		catch (Exception e) {
+			throw new ServletException(e);
+		}
 	}
 }

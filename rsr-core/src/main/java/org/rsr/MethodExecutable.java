@@ -32,10 +32,8 @@ public class MethodExecutable implements Executable {
 				parameterProviders.add(new StringRouteParamProvider(numParameters++));
 			} else if (clazz.equals(Long.class)) {
 				parameterProviders.add(new LongRouteParamProvider(numParameters++));
-				numParameters ++;
 			} else if (clazz.equals(Integer.class)) {
 				parameterProviders.add(new IntegerRouteParamProvider(numParameters++));
-				numParameters ++;
 			} else if (Context.class.isAssignableFrom(clazz)) {
 				parameterProviders.add(new ContextParameterProvider());
 			} else {

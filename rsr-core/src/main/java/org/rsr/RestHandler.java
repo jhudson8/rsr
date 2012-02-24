@@ -26,6 +26,10 @@ public class RestHandler implements Serializable {
 	public static Pattern escapeRegExp = Pattern
 			.compile("[-\\[\\]{}()+?.,\\\\^$|#\\s]");
 
+	private static Class<?>[] serializableTypes = new Class<?>[] {
+		String.class, Long.class, Integer.class, Double.class, Float.class, Boolean.class	
+	};
+
 	private Map<String, Serializable> controllerMap = new HashMap<String, Serializable>();
 	private Map<String, ArrayList<RouteMapping>> routeMappings = new HashMap<String, ArrayList<RouteMapping>>();
 
@@ -51,6 +55,7 @@ public class RestHandler implements Serializable {
 		if (null != prAnn) {
 			defaultMediaType = prAnn.value();
 		}
+		Serializer defaultSerializer = createSerializer(controller.getClass().getAnnotation(org.rsr.Serializer.class));
 		for (Method m : controller.getClass().getMethods()) {
 			ArrayList<String> types = new ArrayList<String>();
 			if (null != m.getAnnotation(GET.class))
@@ -66,10 +71,10 @@ public class RestHandler implements Serializable {
 				String route = null;
 				if (null != pAnn) {
 					route = ((prefix != null) ? prefix : "") + pAnn.value();
-				}
-				else {
+				} else {
 					route = prefix;
-					if (null == route) continue;
+					if (null == route)
+						continue;
 				}
 				String[] mediaType = null;
 				prAnn = controller.getClass().getAnnotation(Produces.class);
@@ -80,21 +85,83 @@ public class RestHandler implements Serializable {
 					mediaType = defaultMediaType;
 				if (null != mediaType && mediaType.length > 0)
 					mtVal = mediaType[0];
+				
+				Serializer serializer = createSerializer(m.getAnnotation(org.rsr.Serializer.class));
+				if (null == serializer) serializer = defaultSerializer;
 				for (String type : types) {
-					// FIXME add serializer support
-					addRoute(route, m, controller, type, mtVal, null);
+					RouteSettings settings = addRoute(route, m, controller, type, mtVal, null);
+					if (null != serializer) {
+						settings.setSerializer(serializer);
+					}
 				}
 			}
 		}
 	}
 
-	public void addRoute(String route, Executable executable, String type,
-			String mediaType, Serializer serializer) {
+	private Serializer createSerializer(org.rsr.Serializer ann) {
+		if (null == ann) return null;
+		Class clazz = ann.value();
+		if (null == clazz || clazz.equals(Serializer.class)) clazz = ann.type();
+		if (null == clazz || clazz.equals(Serializer.class)) throw new RestException("Unknown serializer type");
+		Serializer serializer = null;
+		try {
+			serializer = (Serializer) clazz.getConstructor(new Class[0]).newInstance(new Object[0]);
+		}
+		catch (Exception e) {
+			throw new RestException("Can't instantiate serializer '" + clazz.getName() + "'", e);
+		}
+		String properties = ann.properties();
+		if (null != properties && properties.length() > 0) {
+			String[] props = properties.split(",");
+			for (String prop : props) {
+				String[] keyValue = prop.split("=");
+				if (keyValue.length == 2) {
+					String methodName = "set" + Character.toUpperCase(keyValue[0].charAt(0)) + keyValue[0].substring(1);
+					Method m = null;
+					Class type = null;
+					for (Class<?> typeClass : serializableTypes) {
+						try {
+							m = clazz.getMethod(methodName, new Class[]{typeClass});
+							type = typeClass;
+							break;
+						} catch (NoSuchMethodException e) {}
+					}
+					if (null != m) {
+						try {
+							m.invoke(serializer, convertValue(keyValue[1], type));
+						}
+						catch (Exception e) {
+							throw new RestException("Unable to set property '" + keyValue[1] + "' on '" + clazz.getName() + "' (" + properties + ")");
+						}
+					} else {
+						throw new RestException("Unable to set property '" + keyValue[1] + "' on '" + clazz.getName() + "' (" + properties + ")");
+					}
+				} else {
+					throw new RestException("Invalid serializer proerties for '" + clazz.getName() + "' (" + properties + ")");
+				}
+			}
+		}
+		return serializer;
+	}
+
+	public Object convertValue(String s, Class type) {
+		if (null == s || s.length() == 0) return null;
+		if (type.equals(String.class)) return s;
+		if (type.equals(Long.class)) return new Long(s);
+		if (type.equals(Integer.class)) return new Integer(s);
+		if (type.equals(Float.class)) return new Float(s);
+		if (type.equals(Double.class)) return new Double(s);
+		if (type.equals(Boolean.class)) return new Boolean(s);
+		throw new RestException("Invalid parameter type: " + type.getName());
+	}
+
+	public RouteSettings addRoute(String route, Executable executable, String type) {
 		try {
 			RoutePatternInfo routeInfo = compileRoute(route);
 			RouteMapping routeMapping = new RouteMapping(routeInfo.pattern,
-					routeInfo.varNames, executable, mediaType, serializer, null);
+					routeInfo.varNames, executable);
 			routeMappings.get(type).add(routeMapping);
+			return routeMapping.getSettings();
 		} catch (Exception e) {
 			throw new RestException(e);
 		}
@@ -123,22 +190,26 @@ public class RestHandler implements Serializable {
 			RoutePatternInfo routeInfo = compileRoute(route);
 			RouteMapping routeMapping = new RouteMapping(routeInfo.pattern,
 					routeInfo.varNames, methodName, controller,
-					routeInfo.wildcard, mediaType, serializer);
+					routeInfo.wildcard);
+			routeMapping.getSettings().setMediaType(mediaType)
+					.setSerializer(serializer);
 			routeMappings.get(type).add(routeMapping);
 		} catch (Exception e) {
 			throw new RestException(e);
 		}
 	}
 
-	protected void addRoute(String route, Method method,
+	protected RouteSettings addRoute(String route, Method method,
 			Serializable controller, String type, String mediaType,
 			Serializer serializer) {
 		try {
 			RoutePatternInfo routeInfo = compileRoute(route);
 			RouteMapping routeMapping = new RouteMapping(routeInfo.pattern,
-					routeInfo.varNames, method, controller, routeInfo.wildcard,
-					mediaType, serializer);
+					routeInfo.varNames, method, controller, routeInfo.wildcard);
+			routeMapping.getSettings().setMediaType(mediaType)
+					.setSerializer(serializer);
 			routeMappings.get(type).add(routeMapping);
+			return routeMapping.getSettings();
 		} catch (Exception e) {
 			throw new RestException(e);
 		}

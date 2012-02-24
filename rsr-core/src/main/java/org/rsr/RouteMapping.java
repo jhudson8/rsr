@@ -1,6 +1,5 @@
 package org.rsr;
 
-
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -15,17 +14,16 @@ class RouteMapping {
 	private String mediaType;
 	private Serializer serializer;
 	private String[] varNames;
+	private RouteSettings settings;
 
-	public RouteMapping(Pattern routePattern, String[] varNames,
-			Method method, Serializable controller,
-			boolean wildcard, String mediaType, Serializer serializer) throws Exception {
-		this.init(routePattern, varNames, new MethodExecutable(method, controller),
-				mediaType, serializer, controller);
+	public RouteMapping(Pattern routePattern, String[] varNames, Method method,
+			Serializable controller, boolean wildcard) throws Exception {
+		this.init(routePattern, varNames, new MethodExecutable(method,
+				controller));
 	}
 
-	public RouteMapping(Pattern routePattern, String[] varNames,
-			String method, Serializable controller,
-			boolean wildcard, String mediaType, Serializer serializer) throws Exception {
+	public RouteMapping(Pattern routePattern, String[] varNames, String method,
+			Serializable controller, boolean wildcard) throws Exception {
 		Method bestFit = null;
 		int fitType = -1;
 		Class<?> clazz = controller.getClass();
@@ -40,8 +38,8 @@ class RouteMapping {
 		}
 
 		if (bestFit != null) {
-			init(routePattern, varNames, new MethodExecutable(bestFit, controller),
-					mediaType, serializer, controller);
+			init(routePattern, varNames, new MethodExecutable(bestFit,
+					controller));
 		} else {
 			throw new IllegalArgumentException("No route method match for '"
 					+ method + "' on '" + controller.getClass() + "' with "
@@ -50,21 +48,29 @@ class RouteMapping {
 	}
 
 	public RouteMapping(Pattern routePattern, String[] varNames,
-			Executable executable, String mediaType, Serializer serializer,
-			Serializable controller) throws Exception {
-		init(routePattern, varNames, executable, mediaType, serializer,
-				controller);
+			Executable executable) throws Exception {
+		init(routePattern, varNames, executable);
 	}
 
 	private void init(Pattern routePattern, String[] varNames,
-			Executable executable, String mediaType, Serializer serializer,
-			Serializable controller) throws Exception {
+			Executable executable) throws Exception {
 		this.executable = executable;
 		this.pattern = routePattern;
-		this.mediaType = mediaType;
 		this.varNames = varNames;
-		
+
 		executable.init(varNames);
+		this.settings = new RouteSettings() {
+
+			public RouteSettings setSerializer(Serializer serializer) {
+				RouteMapping.this.serializer = serializer;
+				return RouteMapping.this.settings;
+			}
+
+			public RouteSettings setMediaType(String mediatype) {
+				RouteMapping.this.mediaType = mediatype;
+				return RouteMapping.this.settings;
+			}
+		};
 	}
 
 	private int doesItMatch(Method m, int numParams, boolean wildcard) {
@@ -113,8 +119,8 @@ class RouteMapping {
 		return rtn;
 	}
 
-	public Serializable execute(String route, String[] routeParams, Context context)
-			throws Exception {
+	public Serializable execute(String route, String[] routeParams,
+			Context context) throws Exception {
 		return executable.execute(route, routeParams, context);
 	}
 
@@ -132,5 +138,9 @@ class RouteMapping {
 
 	public String[] getVarNames() {
 		return varNames;
+	}
+
+	public RouteSettings getSettings() {
+		return settings;
 	}
 }

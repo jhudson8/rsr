@@ -18,7 +18,7 @@ public class VariableRouteTest extends TestCase {
 	}
 	
 	public void testStaticRoute() {
-		handler.addRoute("/foo/bar", new TestExecutable(), "get", MediaType.APPLICATION_JSON, null);
+		handler.addRoute("/foo/bar", new TestExecutable(), "get").setMediaType(MediaType.APPLICATION_JSON);
 		RestResponse response = handler.onRoute("/foo/bar", new TestContext(), "get");
 		assertNotNull(response);
 		assertEquals("/foo/bar", response.getResponse().toString());
@@ -29,14 +29,14 @@ public class VariableRouteTest extends TestCase {
 	}
 
 	public void testDynamicRoute() {
-		handler.addRoute("/foo/:bar", new TestExecutable(), "get", MediaType.APPLICATION_JSON, null);
+		handler.addRoute("/foo/:bar", new TestExecutable(), "get").setMediaType(MediaType.APPLICATION_JSON);
 		RestResponse response = handler.onRoute("/foo/whatever", new TestContext(), "get");
 		assertNotNull(response);
 		assertEquals("/foo/whatever", response.getResponse().toString());
 	}
 
 	public void testVarNames() {
-		handler.addRoute("/foo/:bar/blabla/:another", new TestExecutable(), "get", MediaType.APPLICATION_JSON, null);
+		handler.addRoute("/foo/:bar/blabla/:another", new TestExecutable(), "get").setMediaType(MediaType.APPLICATION_JSON);
 		TestContext context = new TestContext();
 		RestResponse response = handler.onRoute("/foo/whatever", context, "get");
 		assertNull(response);
@@ -47,7 +47,7 @@ public class VariableRouteTest extends TestCase {
 
 	public void testWildcard() {
 		TestExecutable executable = new TestExecutable();
-		handler.addRoute("/foo/:bar/*splat", executable, "get", MediaType.APPLICATION_JSON, null);
+		handler.addRoute("/foo/:bar/*splat", executable, "get").setMediaType(MediaType.APPLICATION_JSON);
 		RestResponse response = handler.onRoute("/foo/whatever", new TestContext(), "get");
 		assertNull(response);
 		TestContext context = new TestContext();

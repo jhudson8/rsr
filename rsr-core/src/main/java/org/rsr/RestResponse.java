@@ -27,7 +27,7 @@ public class RestResponse {
 		return mediaType;
 	}
 
-	public void connect(OutputStream out) throws IOException {
+	public void connect(OutputStream out) throws Exception {
 		if (null != response) {
 			if (null == serializer) {
 				out.write(response.toString().getBytes());
