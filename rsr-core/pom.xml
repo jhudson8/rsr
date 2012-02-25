@@ -3,6 +3,19 @@
   <groupId>org.rsr</groupId>
   <artifactId>rsr-core</artifactId>
   <version>0.6.0</version>
+  <description>REST framework using JSR-311 annotations and backbone.js-style route definitions for really simple REST endpoints</description>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <url>https://github.com/jhudson8/rsr/tree/master/rsr-core</url>
+    <connection>https://github.com/jhudson8/rsr/tree/master/rsr-core</connection>
+  </scm>
+
   <dependencies>
     <dependency>
       <groupId>javax.servlet</groupId>

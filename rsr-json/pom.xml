@@ -3,7 +3,19 @@
   <groupId>org.rsr</groupId>
   <artifactId>rsr-json</artifactId>
   <version>0.6.0</version>
-  <name>rsr-json</name>
+  <description>JSON serialization extensions to rsr (really simple REST)</description>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <url>https://github.com/jhudson8/rsr/tree/master/rsr-json</url>
+    <connection>https://github.com/jhudson8/rsr/tree/master/rsr-json</connection>
+  </scm>
+
   <dependencies>
     <dependency>
     	<groupId>org.rsr</groupId>
