@@ -12,6 +12,7 @@ import junit.framework.TestCase;
 
 import org.rsr.RestHandler;
 import org.rsr.RestResponse;
+import org.rsr.http.RsrServlet;
 
 public class AnnotationTest extends TestCase {
 
@@ -21,11 +22,17 @@ public class AnnotationTest extends TestCase {
 	protected void setUp() throws Exception {
 		super.setUp();
 		handler = new RestHandler();
+		Controller1 controller = new Controller1();
+		handler.addController(controller);
 	}
 
-	@Path("/root")
+	/**
+	 * This would be an extension of {@link RsrServlet} with normal usage
+	 */
+	@Path("/root") // optional prefix for all method paths
 	public class Controller1 implements Serializable {
-		
+		private static final long serialVersionUID = 1L;
+
 		@GET
 		@POST
 		@Path("/search/:type/:term")
@@ -51,21 +58,31 @@ public class AnnotationTest extends TestCase {
 		}
 	}
 
+	/**
+	 * Ensure that route parameters can be properly set on method executions
+	 * and ensure proper method responses
+	 */
 	public void testParameterTypes() throws Exception {
-		Controller1 controller = new Controller1();
-		handler.addController(controller);
-		RestResponse response = handler.onRoute("/root/search/foo/bar", new TestContext(), "get");
-		assertEquals(response.getResponse(), "foo-bar");
-		response = handler.onRoute("/root/search/foo/bar", new TestContext(), "post");
-		assertNotNull(response);
 		
-		response = handler.onRoute("/root/12343", new TestContext(), "get");
-		assertEquals(response.getResponse(), "12343");
-		
-		response = handler.onRoute("/root", new TestContext(), "get");
+		// test no route parameters with "get" type
+		RestResponse response = handler.onRoute("/root", new TestContext(), "get");
 		assertEquals(response.getResponse(), "get");
-		
+
+		// test no route parameters with "post" type
 		response = handler.onRoute("/root", new TestContext(), "post");
 		assertEquals(response.getResponse(), "post");
+		
+		// test a single route parameter
+		response = handler.onRoute("/root/12343", new TestContext(), "get");
+		assertEquals(response.getResponse(), "12343");
+
+		// multiple parameters in this route
+		response = handler.onRoute("/root/search/foo/bar", new TestContext(), "get");
+		assertEquals(response.getResponse(), "foo-bar");
+
+		// test that the that is also a response to a "post" type
+		response = handler.onRoute("/root/search/foo/bar", new TestContext(), "post");
+		assertNotNull(response);
+
 	}
 }
