@@ -2,6 +2,7 @@ package org.rsr;
 
 
 import java.io.Serializable;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,14 +12,19 @@ import org.rsr.params.IntegerRouteParamProvider;
 import org.rsr.params.LongRouteParamProvider;
 import org.rsr.params.ParameterProvider;
 import org.rsr.params.StringRouteParamProvider;
+import org.rsr.serializer.AnnotationProvider;
 
-public class MethodExecutable implements Executable {
+public class MethodExecutable implements Executable, AnnotationProvider {
 
 	private Object target;
 	private Method method;
 	private List<ParameterProvider<?>> parameterProviders;
 
 	public void init(String[] parameterNames) {
+	}
+
+	public <T extends Annotation> T getRouteAnnotation(Class<T> annotationClass) {
+		return method.getAnnotation(annotationClass);
 	}
 
 	public MethodExecutable (Method m, Object target) {
