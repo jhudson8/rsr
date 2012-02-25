@@ -5,12 +5,14 @@ import java.io.OutputStream;
 import java.io.Serializable;
 
 import org.apache.commons.io.IOUtils;
+import org.rsr.Context;
+import org.rsr.Executable;
 import org.rsr.RestException;
 
 public class DefaultSerializer implements Serializer {
 
 	public void serialize(Serializable response, String mediaType,
-			OutputStream out) throws Exception {
+			OutputStream out, Context context, Executable executable) throws Exception {
 		this.serialize(response, mediaType, out, true);
 	}
 

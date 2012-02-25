@@ -144,6 +144,8 @@ public class JsonBeanTest extends TestCase {
 	 * Simple address model object
 	 */
 	public static class Address implements Serializable {
+		private static final long serialVersionUID = 1L;
+
 		private String street1;
 		private String city;
 		private String state;

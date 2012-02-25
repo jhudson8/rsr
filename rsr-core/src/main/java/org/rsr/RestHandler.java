@@ -98,6 +98,7 @@ public class RestHandler implements Serializable {
 		}
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private Serializer createSerializer(org.rsr.Serializer ann) {
 		if (null == ann) return null;
 		Class clazz = ann.value();
@@ -144,6 +145,7 @@ public class RestHandler implements Serializable {
 		return serializer;
 	}
 
+	@SuppressWarnings("rawtypes")
 	public Object convertValue(String s, Class type) {
 		if (null == s || s.length() == 0) return null;
 		if (type.equals(String.class)) return s;

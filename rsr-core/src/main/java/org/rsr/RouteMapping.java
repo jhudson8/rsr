@@ -73,6 +73,7 @@ class RouteMapping {
 		};
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private int doesItMatch(Method m, int numParams, boolean wildcard) {
 		int rtn = -1;
 		Class[] sig = m.getParameterTypes();

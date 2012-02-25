@@ -7,6 +7,8 @@ import java.util.Map;
 
 import org.apache.commons.beanutils.PropertyUtils;
 import org.json.simple.JSONValue;
+import org.rsr.Context;
+import org.rsr.Executable;
 
 public class SimpleJsonBeanSerializer extends DefaultSerializer {
 
@@ -14,9 +16,10 @@ public class SimpleJsonBeanSerializer extends DefaultSerializer {
 	private boolean noClass = true;
 	private int deep = 1;
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public void serialize(Serializable response, String mediaType,
-			OutputStream out) throws Exception {
+			OutputStream out, Context context, Executable executable) throws Exception {
 		boolean handled = super.serialize(response, mediaType, out, false);
 		if (!handled) {
 			Map data = PropertyUtils.describe(response);
@@ -25,6 +28,7 @@ public class SimpleJsonBeanSerializer extends DefaultSerializer {
 		}
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	protected void evaluate(Map data, int level) throws Exception {
 		if (noClass) {
 			data.remove("class");

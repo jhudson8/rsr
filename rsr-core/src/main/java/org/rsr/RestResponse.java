@@ -1,6 +1,5 @@
 package org.rsr;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
 
@@ -32,7 +31,7 @@ public class RestResponse {
 			if (null == serializer) {
 				out.write(response.toString().getBytes());
 			} else {
-				serializer.serialize(response, mediaType, out);
+				serializer.serialize(response, mediaType, out, null, null);
 			}
 		}
 	}
