@@ -2,13 +2,13 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.rsr</groupId>
   <artifactId>rsr-json</artifactId>
-  <version>0.6.0</version>
+  <version>0.0.1-SNAPSHOT</version>
   <name>rsr-json</name>
   <dependencies>
     <dependency>
     	<groupId>org.rsr</groupId>
     	<artifactId>rsr-core</artifactId>
-    	<version>0.6.0</version>
+    	<version>0.0.1-SNAPSHOT</version>
     </dependency>
     <dependency>
     	<groupId>com.googlecode.json-simple</groupId>
