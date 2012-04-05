@@ -10,18 +10,18 @@ import javax.ws.rs.core.MediaType;
 
 import junit.framework.TestCase;
 
-import org.rsr.RestHandler;
+import org.rsr.RsrHandler;
 import org.rsr.RestResponse;
 import org.rsr.http.RsrServlet;
 
 public class AnnotationTest extends TestCase {
 
-	private RestHandler handler = null;
+	private RsrHandler handler = null;
 	
 	@Override
 	protected void setUp() throws Exception {
 		super.setUp();
-		handler = new RestHandler();
+		handler = new RsrHandler();
 		Controller1 controller = new Controller1();
 		handler.addController(controller);
 	}

@@ -2,6 +2,11 @@ package org.rsr.params;
 
 import java.io.Serializable;
 
+/**
+ * Parameter converter used to return a long value
+ * 
+ * @author Joe Hudson
+ */
 public class LongParameterConverter implements ParameterConverter {
 
 	public Serializable convert(String param) {

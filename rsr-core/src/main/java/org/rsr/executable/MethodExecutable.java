@@ -1,5 +1,4 @@
-package org.rsr;
-
+package org.rsr.executable;
 
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
@@ -7,6 +6,8 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.rsr.Context;
+import org.rsr.RsrException;
 import org.rsr.params.ContextParameterProvider;
 import org.rsr.params.IntegerRouteParamProvider;
 import org.rsr.params.LongRouteParamProvider;
@@ -14,6 +15,11 @@ import org.rsr.params.ParameterProvider;
 import org.rsr.params.StringRouteParamProvider;
 import org.rsr.serializer.AnnotationProvider;
 
+/**
+ * Executable implementation for a class method
+ * 
+ * @author Joe Hudson
+ */
 public class MethodExecutable implements Executable, AnnotationProvider {
 
 	private Object target;
@@ -27,6 +33,10 @@ public class MethodExecutable implements Executable, AnnotationProvider {
 		return method.getAnnotation(annotationClass);
 	}
 
+	/**
+	 * @param m the method
+	 * @param target the object which contains the method for execution
+	 */
 	public MethodExecutable (Method m, Object target) {
 		this.method = m;
 		int numParameters = 0;
@@ -43,7 +53,7 @@ public class MethodExecutable implements Executable, AnnotationProvider {
 			} else if (Context.class.isAssignableFrom(clazz)) {
 				parameterProviders.add(new ContextParameterProvider());
 			} else {
-				throw new RuntimeException("Unknown method paramer type: " + clazz.getName());
+				throw new RsrException("Unknown method paramer type: " + clazz.getName());
 			}
 		}
 	}

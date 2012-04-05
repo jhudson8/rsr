@@ -5,8 +5,15 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import org.rsr.executable.Executable;
+import org.rsr.executable.MethodExecutable;
 import org.rsr.serializer.Serializer;
 
+/**
+ * For internal use.  Contains all data required for a route mapping.
+ * 
+ * @author Joe Hudson
+ */
 class RouteMapping {
 
 	private Pattern pattern;
@@ -16,12 +23,30 @@ class RouteMapping {
 	private String[] varNames;
 	private RouteSettings settings;
 
+	/**
+	 * Route mapping for a method
+	 * 
+	 * @param routePattern the defined route pattern
+	 * @param varNames all route variable names (wildcards or standard)
+	 * @param method the method 
+	 * @param controller the object which contains the method
+	 * @param wildcard indicates if the route contains a wildcard match
+	 */
 	public RouteMapping(Pattern routePattern, String[] varNames, Method method,
 			Serializable controller, boolean wildcard) throws Exception {
 		this.init(routePattern, varNames, new MethodExecutable(method,
 				controller));
 	}
 
+	/**
+	 * Route mapping for a method (as defined by a name to be found)
+	 * 
+	 * @param routePattern the defined route pattern
+	 * @param varNames all route variable names (wildcards or standard)
+	 * @param method the method name
+	 * @param controller the object which contains the method
+	 * @param wildcard indicates if the route contains a wildcard match
+	 */
 	public RouteMapping(Pattern routePattern, String[] varNames, String method,
 			Serializable controller, boolean wildcard) throws Exception {
 		Method bestFit = null;
@@ -41,12 +66,19 @@ class RouteMapping {
 			init(routePattern, varNames, new MethodExecutable(bestFit,
 					controller));
 		} else {
-			throw new IllegalArgumentException("No route method match for '"
+			throw new RsrException("No route method match for '"
 					+ method + "' on '" + controller.getClass() + "' with "
 					+ varNames.length + " params");
 		}
 	}
 
+	/**
+	 * Route mapping for a generic executable
+	 * 
+	 * @param routePattern the defined route pattern
+	 * @param varNames all route variable names (wildcards or standard)
+	 * @param executable the executable
+	 */
 	public RouteMapping(Pattern routePattern, String[] varNames,
 			Executable executable) throws Exception {
 		init(routePattern, varNames, executable);
@@ -120,27 +152,49 @@ class RouteMapping {
 		return rtn;
 	}
 
+	/**
+	 * execute this route mapping
+	 * @param route the actual route (query string)
+	 * @param routeParams the route parameters extracted from the query string
+	 * @param context the execution context
+	 * @return the response directly from the executable result
+	 */
 	public Serializable execute(String route, String[] routeParams,
 			Context context) throws Exception {
 		return executable.execute(route, routeParams, context);
 	}
 
+	/**
+	 * @return the route pattern
+	 */
 	public Pattern getPattern() {
 		return pattern;
 	}
 
+	/**
+	 * @return the route media type
+	 */
 	public String getMediaType() {
 		return mediaType;
 	}
 
+	/**
+	 * @return the route serializer
+	 */
 	public Serializer getSerializer() {
 		return serializer;
 	}
 
+	/**
+	 * @return the route variable names
+	 */
 	public String[] getVarNames() {
 		return varNames;
 	}
 
+	/**
+	 * @return the route settings
+	 */
 	public RouteSettings getSettings() {
 		return settings;
 	}

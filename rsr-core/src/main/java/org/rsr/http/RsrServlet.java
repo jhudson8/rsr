@@ -9,25 +9,51 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.rsr.RestHandler;
+import org.rsr.RsrHandler;
 import org.rsr.RestResponse;
 
+/**
+ * Main class to be used for servlet-based route mappings.  You can extend this servlet and provide your own
+ * annotated methods.  Alternatively, if you want IOC behavior, you can override {@link RsrServlet#getController()}
+ * to return a value retrieved from an IOC container.
+ * 
+ * In addition, routes can be added manually by overriding {@link RsrServlet#registerRoutes(RsrHandler)} and calling
+ * addRoute on {@link RsrServlet#getRsrHandler()}.
+ * 
+ * @author Joe Hudson
+ *
+ */
 public class RsrServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
-	private RestHandler handler;
+	private RsrHandler handler;
 
+	/**
+	 * @return the RSR handler
+	 */
+	protected RsrHandler getRsrHandler() {
+		return handler;
+	}
+
+	/**
+	 * @return the controller used to find annotated route handlers
+	 */
 	protected Serializable getController() {
 		return this;
 	}
 
 	@Override
 	public void init(ServletConfig config) throws ServletException {
-		handler = new RestHandler();
+		handler = new RsrHandler();
+		super.init(config);
 		registerRoutes(handler);
 	}
 
-	protected void registerRoutes(RestHandler handler) {
+	/**
+	 * Register all routes.  By default, add the controller to the {@link RsrHandler}
+	 * @param handler the RSR handler
+	 */
+	protected void registerRoutes(RsrHandler handler) {
 		Serializable controller = getController();
 		if (null != controller) {
 			handler.addController(getController());

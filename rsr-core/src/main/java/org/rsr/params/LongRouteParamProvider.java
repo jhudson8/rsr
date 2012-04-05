@@ -1,11 +1,14 @@
 package org.rsr.params;
 
-
 import java.io.Serializable;
 
 import org.rsr.Context;
 
-
+/**
+ * Parameter provider used to return a long value from a route paramter
+ * 
+ * @author Joe Hudson
+ */
 public class LongRouteParamProvider implements ParameterProvider<Long> {
 
 	private int index = -1;

@@ -16,11 +16,23 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import org.rsr.executable.Executable;
 import org.rsr.serializer.Serializer;
 
-public class RestHandler implements Serializable {
+/**
+ * Main handler for a RSR service.  Normally this is encapsulated by a servlet but it is not dependant on that.
+ * Usage would mostly be referenced from {@link org.rsr.http.RsrServlet}.
+ * 
+ * @author Joe Hudson
+ */
+public class RsrHandler implements Serializable {
 	private static final long serialVersionUID = 1L;
 
+	public static final String GET = "GET";
+	public static final String PUT = "PUT";
+	public static final String POST = "POST";
+	public static final String DELETE = "DELETE";
+	
 	public static Pattern namedParam = Pattern.compile(":\\w+");
 	public static Pattern splatParam = Pattern.compile("\\*\\w+");
 	public static Pattern escapeRegExp = Pattern
@@ -33,17 +45,28 @@ public class RestHandler implements Serializable {
 	private Map<String, Serializable> controllerMap = new HashMap<String, Serializable>();
 	private Map<String, ArrayList<RouteMapping>> routeMappings = new HashMap<String, ArrayList<RouteMapping>>();
 
-	public RestHandler() {
+	/**
+	 * Create a new handler without any defined routes
+	 */
+	public RsrHandler() {
 		init();
 	}
 
 	private void init() {
-		routeMappings.put("get", new ArrayList<RouteMapping>());
-		routeMappings.put("put", new ArrayList<RouteMapping>());
-		routeMappings.put("post", new ArrayList<RouteMapping>());
-		routeMappings.put("delete", new ArrayList<RouteMapping>());
+		routeMappings.put(GET, new ArrayList<RouteMapping>());
+		routeMappings.put(PUT, new ArrayList<RouteMapping>());
+		routeMappings.put(POST, new ArrayList<RouteMapping>());
+		routeMappings.put(DELETE, new ArrayList<RouteMapping>());
 	}
 
+	/**
+	 * Add a controller class.  This class will be evaluated for all annotated endpoints.  An endpoint will be a
+	 * method with a {@link GET}, {@link POST}, {@link PUT}, {@link DELETE} annotation.  A {@link Path} can either
+	 * be set at the class level or the method level.  If set at both, the method level path will be appended to
+	 * the class level path.  All other JSR-311 annotations are supported as well.
+	 * 
+	 * @param controller the controller class
+	 */
 	public void addController(Serializable controller) {
 		Path pAnn = controller.getClass().getAnnotation(Path.class);
 		String prefix = null;
@@ -55,17 +78,17 @@ public class RestHandler implements Serializable {
 		if (null != prAnn) {
 			defaultMediaType = prAnn.value();
 		}
-		Serializer defaultSerializer = createSerializer(controller.getClass().getAnnotation(org.rsr.Serializer.class));
+		Serializer defaultSerializer = createSerializer(controller.getClass().getAnnotation(org.rsr.annotation.Serializer.class));
 		for (Method m : controller.getClass().getMethods()) {
 			ArrayList<String> types = new ArrayList<String>();
 			if (null != m.getAnnotation(GET.class))
-				types.add("get");
+				types.add(GET);
 			if (null != m.getAnnotation(PUT.class))
-				types.add("put");
+				types.add(PUT);
 			if (null != m.getAnnotation(POST.class))
-				types.add("post");
+				types.add(POST);
 			if (null != m.getAnnotation(DELETE.class))
-				types.add("delete");
+				types.add(DELETE);
 			if (types.size() > 0) {
 				pAnn = m.getAnnotation(Path.class);
 				String route = null;
@@ -86,7 +109,7 @@ public class RestHandler implements Serializable {
 				if (null != mediaType && mediaType.length > 0)
 					mtVal = mediaType[0];
 				
-				Serializer serializer = createSerializer(m.getAnnotation(org.rsr.Serializer.class));
+				Serializer serializer = createSerializer(m.getAnnotation(org.rsr.annotation.Serializer.class));
 				if (null == serializer) serializer = defaultSerializer;
 				for (String type : types) {
 					RouteSettings settings = addRoute(route, m, controller, type, mtVal, null);
@@ -98,18 +121,22 @@ public class RestHandler implements Serializable {
 		}
 	}
 
+	/**
+	 * @param ann the serializer annotation
+	 * @return a serializer from the serializer annotation
+	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private Serializer createSerializer(org.rsr.Serializer ann) {
+	private Serializer createSerializer(org.rsr.annotation.Serializer ann) {
 		if (null == ann) return null;
 		Class clazz = ann.value();
 		if (null == clazz || clazz.equals(Serializer.class)) clazz = ann.type();
-		if (null == clazz || clazz.equals(Serializer.class)) throw new RestException("Unknown serializer type");
+		if (null == clazz || clazz.equals(Serializer.class)) throw new RsrException("Unknown serializer type");
 		Serializer serializer = null;
 		try {
 			serializer = (Serializer) clazz.getConstructor(new Class[0]).newInstance(new Object[0]);
 		}
 		catch (Exception e) {
-			throw new RestException("Can't instantiate serializer '" + clazz.getName() + "'", e);
+			throw new RsrException("Can't instantiate serializer '" + clazz.getName() + "'", e);
 		}
 		String properties = ann.properties();
 		if (null != properties && properties.length() > 0) {
@@ -132,19 +159,25 @@ public class RestHandler implements Serializable {
 							m.invoke(serializer, convertValue(keyValue[1], type));
 						}
 						catch (Exception e) {
-							throw new RestException("Unable to set property '" + keyValue[1] + "' on '" + clazz.getName() + "' (" + properties + ")");
+							throw new RsrException("Unable to set property '" + keyValue[1] + "' on '" + clazz.getName() + "' (" + properties + ")");
 						}
 					} else {
-						throw new RestException("Unable to set property '" + keyValue[1] + "' on '" + clazz.getName() + "' (" + properties + ")");
+						throw new RsrException("Unable to set property '" + keyValue[1] + "' on '" + clazz.getName() + "' (" + properties + ")");
 					}
 				} else {
-					throw new RestException("Invalid serializer proerties for '" + clazz.getName() + "' (" + properties + ")");
+					throw new RsrException("Invalid serializer proerties for '" + clazz.getName() + "' (" + properties + ")");
 				}
 			}
 		}
 		return serializer;
 	}
 
+	/**
+	 * Convert a value from the source string to the provided class type
+	 * @param s the source value
+	 * @param type the conversion type
+	 * @return the converted value
+	 */
 	@SuppressWarnings("rawtypes")
 	public Object convertValue(String s, Class type) {
 		if (null == s || s.length() == 0) return null;
@@ -154,26 +187,55 @@ public class RestHandler implements Serializable {
 		if (type.equals(Float.class)) return new Float(s);
 		if (type.equals(Double.class)) return new Double(s);
 		if (type.equals(Boolean.class)) return new Boolean(s);
-		throw new RestException("Invalid parameter type: " + type.getName());
+		throw new RsrException("Invalid parameter type: " + type.getName());
 	}
 
+	/**
+	 * Add a route definition with an executable to handle the service endpoint
+	 * @param route the route definition.  The route definition can contain
+	 * 	parameters and/or a wildcard.  See backbonejs routes for example.
+	 * @param executable to be executed when the route is matched
+	 * @param type the type (can be get, post, put, delete): see statics on this class
+	 * @return the route settings for this route mapping
+	 */
 	public RouteSettings addRoute(String route, Executable executable, String type) {
 		try {
+			type = type.toUpperCase();
 			RoutePatternInfo routeInfo = compileRoute(route);
 			RouteMapping routeMapping = new RouteMapping(routeInfo.pattern,
 					routeInfo.varNames, executable);
 			routeMappings.get(type).add(routeMapping);
 			return routeMapping.getSettings();
 		} catch (Exception e) {
-			throw new RestException(e);
+			throw new RsrException(e);
 		}
 	}
 
+	/**
+	 * Add a route definition for a method name that is defined on this
+	 * @param route the route definition.  The route definition can contain
+	 * 	parameters and/or a wildcard.  See backbonejs routes for example.
+	 * @param methodName the method name
+	 * @param type the type (can be get, post, put, delete): see statics on this class
+	 * @param mediaType the media type
+	 * @param serializer the serializer
+	 */
 	protected void addRoute(String route, String methodName, String type,
 			String mediaType, Serializer serializer) {
 		addRoute(route, methodName, this, type, mediaType, serializer);
 	}
 
+	/**
+	 * Add a route definition for a method name that is defined on a controller that has
+	 *   been added previously using {@link RsrHandler#addController(Serializable)}
+	 * @param route the route definition.  The route definition can contain
+	 * 	parameters and/or a wildcard.  See backbonejs routes for example.
+	 * @param methodName the method name
+	 * @param controllerName the controller name
+	 * @param type the type (can be get, post, put, delete): see statics on this class
+	 * @param mediaType the media type
+	 * @param serializer the serializer
+	 */
 	protected void addRoute(String route, String methodName,
 			String controllerName, String type, String mediaType,
 			Serializer serializer) {
@@ -185,10 +247,22 @@ public class RestHandler implements Serializable {
 		addRoute(route, methodName, controller, type, mediaType, serializer);
 	}
 
+	/**
+	 * Add a route definition for a method name that is defined on a controller that is
+	 * provided as part of this method.
+	 * @param route the route definition.  The route definition can contain
+	 * 	parameters and/or a wildcard.  See backbonejs routes for example.
+	 * @param methodName the method name
+	 * @param controller the controller object
+	 * @param type the type (can be get, post, put, delete): see statics on this class
+	 * @param mediaType the media type
+	 * @param serializer the serializer
+	 */
 	protected void addRoute(String route, String methodName,
 			Serializable controller, String type, String mediaType,
 			Serializer serializer) {
 		try {
+			type = type.toUpperCase();
 			RoutePatternInfo routeInfo = compileRoute(route);
 			RouteMapping routeMapping = new RouteMapping(routeInfo.pattern,
 					routeInfo.varNames, methodName, controller,
@@ -197,14 +271,26 @@ public class RestHandler implements Serializable {
 					.setSerializer(serializer);
 			routeMappings.get(type).add(routeMapping);
 		} catch (Exception e) {
-			throw new RestException(e);
+			throw new RsrException(e);
 		}
 	}
 
+	/**
+	 * Add a route definition for a method that is defined on a controller that is
+	 * provided as part of this method.
+	 * @param route the route definition.  The route definition can contain
+	 * 	parameters and/or a wildcard.  See backbonejs routes for example.
+	 * @param method the controller method
+	 * @param controller the controller object
+	 * @param type the type (can be get, post, put, delete): see statics on this class
+	 * @param mediaType the media type
+	 * @param serializer the serializer
+	 */
 	protected RouteSettings addRoute(String route, Method method,
 			Serializable controller, String type, String mediaType,
 			Serializer serializer) {
 		try {
+			type = type.toUpperCase();
 			RoutePatternInfo routeInfo = compileRoute(route);
 			RouteMapping routeMapping = new RouteMapping(routeInfo.pattern,
 					routeInfo.varNames, method, controller, routeInfo.wildcard);
@@ -213,11 +299,22 @@ public class RestHandler implements Serializable {
 			routeMappings.get(type).add(routeMapping);
 			return routeMapping.getSettings();
 		} catch (Exception e) {
-			throw new RestException(e);
+			throw new RsrException(e);
 		}
 	}
 
+	/**
+	 * Called when a route has been requested.  All route definitions will be queried in the order they
+	 * were registered to find a match.  The first matching route definition will have it's associated
+	 * executable handle the service request.
+	 * 
+	 * @param route the route query string
+	 * @param context the execution context
+	 * @param type get/post/put/delete
+	 * @return the response (encapsulates the actual execution response and other route definitions)
+	 */
 	public RestResponse onRoute(String route, Context context, String type) {
+		type = type.toUpperCase();
 		try {
 			List<RouteMapping> mappings = routeMappings.get(type);
 			if (null != mappings) {
@@ -247,7 +344,7 @@ public class RestHandler implements Serializable {
 			}
 			return null;
 		} catch (Exception e) {
-			throw new RestException(e);
+			throw new RsrException(e);
 		}
 	}
 

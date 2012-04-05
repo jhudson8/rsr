@@ -6,11 +6,13 @@ import java.io.Serializable;
 
 import org.apache.commons.io.IOUtils;
 import org.rsr.Context;
-import org.rsr.Executable;
-import org.rsr.RestException;
+import org.rsr.RsrException;
+import org.rsr.executable.Executable;
 
 public class DefaultSerializer implements Serializer {
 
+	public static final DefaultSerializer INSTANCE = new DefaultSerializer();
+	
 	public void serialize(Serializable response, String mediaType,
 			OutputStream out, Context context, Executable executable) throws Exception {
 		this.serialize(response, mediaType, out, true);
@@ -29,11 +31,11 @@ public class DefaultSerializer implements Serializer {
 			}
 			else {
 				if (validate) {
-					throw new RestException("Invalid response type");
+					throw new RsrException("Invalid response type");
 				}
 				return false;
 			}
 		}
-		return true;
+		return false;
 	}
 }

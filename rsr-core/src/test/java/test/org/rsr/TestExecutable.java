@@ -3,7 +3,7 @@ package test.org.rsr;
 import java.io.Serializable;
 
 import org.rsr.Context;
-import org.rsr.Executable;
+import org.rsr.executable.Executable;
 
 class TestExecutable implements Executable {
 	private String[] parameterNames;
